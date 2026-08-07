@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   clearCache,
   clearOverride,
@@ -71,6 +71,8 @@ const styles: Record<string, React.CSSProperties> = {
     borderColor: "GrayText",
   },
   empty: { color: "GrayText", fontStyle: "italic" },
+  label: { display: "block", fontSize: 13, fontWeight: 500, margin: "0 0 6px" },
+  error: { color: "#d1242f", fontSize: 12, margin: "8px 0 0" },
 };
 
 export default function App() {
@@ -80,27 +82,50 @@ export default function App() {
   const [patSaved, setPatSaved] = useState(false);
   const [overrides, setOverrides] = useState<OverridesMap>({});
   const [cacheCleared, setCacheCleared] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const mounted = useRef(true);
+  const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  function flash(setter: (value: boolean) => void) {
+    setter(true);
+    const id = setTimeout(() => {
+      if (mounted.current) setter(false);
+    }, 1500);
+    timers.current.push(id);
+  }
 
   async function refreshOverrides() {
     setOverrides(await getAllOverrides());
   }
 
   useEffect(() => {
+    const pending = timers.current;
     (async () => {
       const [loadedSettings, loadedOverrides] = await Promise.all([
         getSettings(),
         getAllOverrides(),
       ]);
+      if (!mounted.current) return;
       setSettingsState(loadedSettings);
       setPatInput(loadedSettings.pat ?? "");
       setOverrides(loadedOverrides);
       setLoading(false);
     })();
+    return () => {
+      mounted.current = false;
+      pending.forEach(clearTimeout);
+    };
   }, []);
 
   async function persist(next: Settings) {
-    setSettingsState(next);
-    await setSettings(next);
+    try {
+      await setSettings(next);
+      setSettingsState(next);
+      setError(null);
+    } catch (err) {
+      setError(`Could not save settings: ${String(err)}`);
+    }
   }
 
   async function onToggleEnabled(enabled: boolean) {
@@ -109,6 +134,10 @@ export default function App() {
 
   async function onSaveToken() {
     const trimmed = patInput.trim();
+    if (trimmed === (settings.pat ?? "")) {
+      flash(setPatSaved);
+      return;
+    }
     const next: Settings = { ...settings };
     if (trimmed) {
       next.pat = trimmed;
@@ -116,26 +145,35 @@ export default function App() {
       delete next.pat;
     }
     await persist(next);
-    setPatSaved(true);
-    setTimeout(() => setPatSaved(false), 1500);
+    flash(setPatSaved);
   }
 
   async function onClearToken() {
     setPatInput("");
+    if (settings.pat === undefined) return;
     const next: Settings = { ...settings };
     delete next.pat;
     await persist(next);
   }
 
   async function onRemoveOverride(repoKey: string, filename: string) {
-    await clearOverride(repoKey, filename);
-    await refreshOverrides();
+    try {
+      await clearOverride(repoKey, filename);
+      await refreshOverrides();
+      setError(null);
+    } catch (err) {
+      setError(`Could not remove override: ${String(err)}`);
+    }
   }
 
   async function onClearCache() {
-    await clearCache();
-    setCacheCleared(true);
-    setTimeout(() => setCacheCleared(false), 1500);
+    try {
+      await clearCache();
+      setError(null);
+      flash(setCacheCleared);
+    } catch (err) {
+      setError(`Could not clear cache: ${String(err)}`);
+    }
   }
 
   if (loading) {
@@ -151,6 +189,12 @@ export default function App() {
   return (
     <div style={styles.page}>
       <h1 style={styles.title}>Workflow Visibility</h1>
+
+      {error && (
+        <p role="alert" style={styles.error}>
+          {error}
+        </p>
+      )}
 
       <section style={styles.section}>
         <h2 style={styles.sectionTitle}>General</h2>
@@ -169,8 +213,12 @@ export default function App() {
 
       <section style={styles.section}>
         <h2 style={styles.sectionTitle}>Personal access token</h2>
+        <label htmlFor="pat" style={styles.label}>
+          Token
+        </label>
         <div style={styles.row}>
           <input
+            id="pat"
             style={styles.input}
             type="password"
             placeholder="ghp_…"
