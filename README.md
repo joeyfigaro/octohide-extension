@@ -4,6 +4,9 @@ Octohide tidies up the workflow list on your GitHub Actions pages. Some workflow
 
 GitHub has known about this issue [for years](https://github.com/orgs/community/discussions/12025) but hasn't prioritized a fix; until they do, you can use this.
 
+| Before | After |
+| --- | --- |
+| <img width="331" height="525" alt="image" src="https://github.com/user-attachments/assets/1225ced8-2ea0-4060-b51e-bd4c02a21c54" /> | <img width="333" height="404" alt="image" src="https://github.com/user-attachments/assets/b4885244-4dce-4643-83ff-a29e063f9212" /> |
 
 
 ## Features
