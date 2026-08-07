@@ -109,22 +109,26 @@ function Panel(props: {
         borderRadius: "6px",
       }}
     >
-      <span>Hidden ({props.count})</span>
-      <button
-        type="button"
-        onClick={props.onToggle}
-        style={{
-          cursor: "pointer",
-          fontSize: "12px",
-          padding: "2px 8px",
-          borderRadius: "6px",
-          border: "1px solid rgba(128,128,128,0.4)",
-          background: "transparent",
-          color: "inherit",
-        }}
-      >
-        {props.revealed ? "Hide again" : "Show hidden"}
-      </button>
+      {props.count < 1 ? <span>No hidden workflows</span> : (
+        <span>{props.revealed ? "Showing" : null} {props.count} Hidden Workflows</span>
+      )}
+      {props.count > 0 && (
+        <button
+          type="button"
+          onClick={props.onToggle}
+          style={{
+            cursor: "pointer",
+            fontSize: "12px",
+            padding: "2px 8px",
+            borderRadius: "6px",
+            border: "1px solid rgba(128,128,128,0.4)",
+            background: "transparent",
+            color: "inherit",
+          }}
+        >
+          {props.revealed ? "Hide" : "Show All"}
+        </button>
+      )}
     </div>
   );
 }

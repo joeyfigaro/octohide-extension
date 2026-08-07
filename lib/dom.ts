@@ -85,7 +85,7 @@ export function setDimmed(element: HTMLElement, dimmed: boolean): void {
     if (element.dataset.wveDimmed === "true") return;
     element.dataset.wvePrevOpacity = element.style.opacity;
     element.dataset.wveDimmed = "true";
-    element.style.opacity = "0.8";
+    element.style.opacity = "0.35";
   } else {
     if (element.dataset.wveDimmed !== "true") return;
     element.style.opacity = element.dataset.wvePrevOpacity ?? "";
