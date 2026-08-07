@@ -40,6 +40,17 @@ describe("rawWorkflowUrl", () => {
       "https://github.com/my%20org/a%2Bb/raw/HEAD/.github/workflows/release%20build.yml",
     );
   });
+
+  it("percent-encodes a slash in the filename to prevent path traversal", () => {
+    const ref: WorkflowRef = {
+      owner: "octocat",
+      repo: "hello-world",
+      filename: "../../secret.yml",
+    };
+    expect(rawWorkflowUrl(ref)).toBe(
+      "https://github.com/octocat/hello-world/raw/HEAD/.github/workflows/..%2F..%2Fsecret.yml",
+    );
+  });
 });
 
 describe("message contract", () => {

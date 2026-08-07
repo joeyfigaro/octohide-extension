@@ -45,6 +45,12 @@ describe("parseTriggers", () => {
     const yaml = "on: []\njobs:\n  build: {}\n";
     expect(parseTriggers(yaml)).toBeNull();
   });
+
+  it("filters non-string entries from the array form", () => {
+    const yaml =
+      "on:\n  - push\n  - foo: bar\n  - workflow_call\njobs:\n  build: {}\n";
+    expect(parseTriggers(yaml)).toEqual(["push", "workflow_call"]);
+  });
 });
 
 describe("isReusableOnly", () => {
