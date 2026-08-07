@@ -10,6 +10,7 @@ export default defineConfig({
     host_permissions: [
       "https://github.com/*",
       "https://raw.githubusercontent.com/*",
+      "https://api.github.com/*",
     ],
   },
 });

@@ -68,10 +68,14 @@ export function parseSidebarWorkflows(root: ParentNode): SidebarWorkflow[] {
 
 export function setHidden(element: HTMLElement, hidden: boolean): void {
   if (hidden) {
+    if (element.dataset.wveHidden === "true") return;
+    element.dataset.wvePrevDisplay = element.style.display;
     element.dataset.wveHidden = "true";
     element.style.display = "none";
   } else {
+    if (element.dataset.wveHidden !== "true") return;
+    element.style.display = element.dataset.wvePrevDisplay ?? "";
+    delete element.dataset.wvePrevDisplay;
     delete element.dataset.wveHidden;
-    element.style.display = "";
   }
 }

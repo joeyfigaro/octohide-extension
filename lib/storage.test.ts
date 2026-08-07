@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
+import { browser } from "wxt/browser";
 import { fakeBrowser } from "wxt/testing/fake-browser";
 import {
   clearCache,
@@ -25,6 +26,11 @@ describe("settings", () => {
   it("round-trips settings including the pat", async () => {
     await setSettings({ enabled: false, pat: "ghp_secret" });
     expect(await getSettings()).toEqual({ enabled: false, pat: "ghp_secret" });
+  });
+
+  it("falls back to the default when stored data has the wrong shape", async () => {
+    await browser.storage.local.set({ "wve:settings": "corrupt" });
+    expect(await getSettings()).toEqual({ enabled: true });
   });
 });
 

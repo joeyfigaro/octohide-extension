@@ -22,7 +22,9 @@ type CacheMap = Record<string, Record<string, CacheEntry>>;
 async function read<T>(key: string, fallback: T): Promise<T> {
   const stored = await browser.storage.local.get(key);
   const value = stored[key];
-  return value === undefined ? fallback : (value as T);
+  if (value === undefined) return fallback;
+  if (typeof value !== typeof fallback || value === null) return fallback;
+  return value as T;
 }
 
 async function write(key: string, value: unknown): Promise<void> {

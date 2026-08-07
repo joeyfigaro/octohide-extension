@@ -65,6 +65,12 @@ describe("parseWorkflowHref", () => {
       parseWorkflowHref("/octocat/hello-world/actions/workflows/ci.txt"),
     ).toBeNull();
   });
+
+  it("returns null for a workflow run URL with a trailing segment", () => {
+    expect(
+      parseWorkflowHref("/octocat/hello-world/actions/workflows/ci.yml/123"),
+    ).toBeNull();
+  });
 });
 
 describe("parseRepo", () => {
@@ -175,5 +181,13 @@ describe("setHidden", () => {
     setHidden(element, true);
     expect(element.style.display).toBe("none");
     expect(element.dataset.wveHidden).toBe("true");
+  });
+
+  it("restores a pre-existing inline display value on un-hide", () => {
+    element.style.display = "flex";
+    setHidden(element, true);
+    expect(element.style.display).toBe("none");
+    setHidden(element, false);
+    expect(element.style.display).toBe("flex");
   });
 });
