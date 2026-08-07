@@ -5,7 +5,7 @@ export default defineConfig({
   manifest: ({ browser }) => ({
     name: "Octohide",
     description:
-      "Hide GitHub workflows from the Actions sidebar. Great for keeping reusable/template workflows out of the way until Github prioritizes a proper fix.",
+      "Hide GitHub workflows from the Actions sidebar. Great for keeping reusable/template workflows out of the way.",
     permissions: ["storage"],
     host_permissions: [
       "https://github.com/*",
