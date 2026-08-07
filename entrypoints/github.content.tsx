@@ -7,9 +7,11 @@ import {
   isActionsPage,
   parseRepo,
   parseSidebarWorkflows,
+  setDimmed,
   setHidden,
   type SidebarWorkflow,
 } from "@/lib/dom";
+import { EYE_CLOSED_SVG, EYE_SVG } from "@/lib/icons";
 import { requestWorkflowYaml } from "@/lib/messaging";
 import {
   getCached,
@@ -44,10 +46,26 @@ let rerun = false;
 
 const failedDetections = new Set<string>();
 
-function unhideAll(): void {
+const STYLE_ID = "wve-styles";
+
+function ensureStyles(): void {
+  if (document.getElementById(STYLE_ID)) return;
+  const style = document.createElement("style");
+  style.id = STYLE_ID;
+  style.textContent =
+    "[data-wve-toggle]{opacity:0;transition:opacity .1s ease-in-out}" +
+    "[data-wve-row]:hover [data-wve-toggle]{opacity:1}" +
+    "[data-wve-toggle]:focus-visible{opacity:1}";
+  document.head.appendChild(style);
+}
+
+function resetRows(): void {
   document
     .querySelectorAll<HTMLElement>('[data-wve-hidden="true"]')
     .forEach((el) => setHidden(el, false));
+  document
+    .querySelectorAll<HTMLElement>('[data-wve-dimmed="true"]')
+    .forEach((el) => setDimmed(el, false));
 }
 
 function removeItemControls(): void {
@@ -61,6 +79,7 @@ function hiddenCount(): number {
 function applyVisibility(): void {
   for (const { workflow, hidden } of lastResults) {
     setHidden(workflow.element, hidden && !revealed);
+    setDimmed(workflow.element, hidden && revealed);
   }
 }
 
@@ -168,38 +187,48 @@ function injectItemControls(
 ): void {
   for (const workflow of workflows) {
     const host = workflow.element;
-    if (host.querySelector("[data-wve-toggle]")) continue;
+    host.dataset.wveRow = "true";
 
-    const button = document.createElement("button");
-    button.dataset.wveToggle = "true";
-    button.type = "button";
-    button.textContent = "⋯";
-    button.title = "Toggle visibility (Workflow Visibility)";
-    Object.assign(button.style, {
-      marginLeft: "6px",
-      padding: "0 4px",
-      fontSize: "11px",
-      lineHeight: "1",
-      cursor: "pointer",
-      border: "1px solid rgba(128,128,128,0.4)",
-      borderRadius: "6px",
-      background: "transparent",
-      color: "inherit",
-      opacity: "0.6",
-    });
+    let button = host.querySelector<HTMLButtonElement>("[data-wve-toggle]");
+    if (!button) {
+      button = document.createElement("button");
+      button.dataset.wveToggle = "true";
+      button.type = "button";
+      Object.assign(button.style, {
+        marginLeft: "6px",
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "2px",
+        lineHeight: "1",
+        cursor: "pointer",
+        border: "1px solid rgba(128,128,128,0.4)",
+        borderRadius: "6px",
+        background: "transparent",
+        color: "inherit",
+      });
 
-    button.addEventListener("click", (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      const next: Override = currentlyHidden(workflow.filename)
-        ? "show"
-        : "hide";
-      void setOverride(repoKey, workflow.filename, next).then(() =>
-        schedule(ctx),
-      );
-    });
+      button.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        const next: Override = currentlyHidden(workflow.filename)
+          ? "show"
+          : "hide";
+        void setOverride(repoKey, workflow.filename, next).then(() =>
+          schedule(ctx),
+        );
+      });
 
-    host.appendChild(button);
+      host.appendChild(button);
+    }
+
+    const hidden = currentlyHidden(workflow.filename);
+    const state = String(hidden);
+    if (button.dataset.wveState !== state) {
+      button.dataset.wveState = state;
+      button.innerHTML = hidden ? EYE_SVG : EYE_CLOSED_SVG;
+      button.title = hidden ? "Show workflow" : "Hide workflow";
+    }
   }
 }
 
@@ -236,7 +265,7 @@ function observeList(ctx: ContentScriptContext, container: Element): void {
 
 async function orchestrate(ctx: ContentScriptContext): Promise<void> {
   if (!isActionsPage(location.pathname)) {
-    unhideAll();
+    resetRows();
     removeItemControls();
     observer?.disconnect();
     removePanel();
@@ -246,7 +275,7 @@ async function orchestrate(ctx: ContentScriptContext): Promise<void> {
 
   const settings = await getSettings();
   if (!settings.enabled) {
-    unhideAll();
+    resetRows();
     removeItemControls();
     observer?.disconnect();
     removePanel();
@@ -279,6 +308,7 @@ async function orchestrate(ctx: ContentScriptContext): Promise<void> {
     }),
   );
 
+  ensureStyles();
   applyVisibility();
   injectItemControls(ctx, repoKey, workflows);
 

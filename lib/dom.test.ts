@@ -4,6 +4,7 @@ import {
   parseRepo,
   parseSidebarWorkflows,
   parseWorkflowHref,
+  setDimmed,
   setHidden,
 } from "@/lib/dom";
 
@@ -189,5 +190,47 @@ describe("setHidden", () => {
     expect(element.style.display).toBe("none");
     setHidden(element, false);
     expect(element.style.display).toBe("flex");
+  });
+});
+
+describe("setDimmed", () => {
+  let element: HTMLElement;
+
+  beforeEach(() => {
+    element = document.createElement("li");
+  });
+
+  it("dims an element", () => {
+    setDimmed(element, true);
+    expect(element.style.opacity).toBe("0.8");
+    expect(element.dataset.wveDimmed).toBe("true");
+  });
+
+  it("restores a previously dimmed element", () => {
+    setDimmed(element, true);
+    setDimmed(element, false);
+    expect(element.style.opacity).toBe("");
+    expect(element.dataset.wveDimmed).toBeUndefined();
+  });
+
+  it("is idempotent when dimming twice", () => {
+    setDimmed(element, true);
+    setDimmed(element, true);
+    expect(element.style.opacity).toBe("0.8");
+    expect(element.dataset.wveDimmed).toBe("true");
+  });
+
+  it("is a no-op when un-dimming an element that is not dimmed", () => {
+    element.style.opacity = "0.5";
+    setDimmed(element, false);
+    expect(element.style.opacity).toBe("0.5");
+  });
+
+  it("restores a pre-existing inline opacity value on un-dim", () => {
+    element.style.opacity = "0.5";
+    setDimmed(element, true);
+    expect(element.style.opacity).toBe("0.8");
+    setDimmed(element, false);
+    expect(element.style.opacity).toBe("0.5");
   });
 });

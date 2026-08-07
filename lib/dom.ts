@@ -79,3 +79,17 @@ export function setHidden(element: HTMLElement, hidden: boolean): void {
     delete element.dataset.wveHidden;
   }
 }
+
+export function setDimmed(element: HTMLElement, dimmed: boolean): void {
+  if (dimmed) {
+    if (element.dataset.wveDimmed === "true") return;
+    element.dataset.wvePrevOpacity = element.style.opacity;
+    element.dataset.wveDimmed = "true";
+    element.style.opacity = "0.8";
+  } else {
+    if (element.dataset.wveDimmed !== "true") return;
+    element.style.opacity = element.dataset.wvePrevOpacity ?? "";
+    delete element.dataset.wvePrevOpacity;
+    delete element.dataset.wveDimmed;
+  }
+}
