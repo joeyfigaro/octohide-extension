@@ -28,7 +28,12 @@ describe("parseWorkflowHref", () => {
   it("parses a relative .yml href", () => {
     expect(
       parseWorkflowHref("/octocat/hello-world/actions/workflows/ci.yml"),
-    ).toEqual({ owner: "octocat", repo: "hello-world", filename: "ci.yml" });
+    ).toEqual({
+      owner: "octocat",
+      repo: "hello-world",
+      filename: "ci.yml",
+      managed: false,
+    });
   });
 
   it("parses a relative .yaml href", () => {
@@ -38,6 +43,7 @@ describe("parseWorkflowHref", () => {
       owner: "octocat",
       repo: "hello-world",
       filename: "release.yaml",
+      managed: false,
     });
   });
 
@@ -46,7 +52,12 @@ describe("parseWorkflowHref", () => {
       parseWorkflowHref(
         "https://github.com/octocat/hello-world/actions/workflows/ci.yml",
       ),
-    ).toEqual({ owner: "octocat", repo: "hello-world", filename: "ci.yml" });
+    ).toEqual({
+      owner: "octocat",
+      repo: "hello-world",
+      filename: "ci.yml",
+      managed: false,
+    });
   });
 
   it("ignores query and hash", () => {
@@ -54,7 +65,36 @@ describe("parseWorkflowHref", () => {
       parseWorkflowHref(
         "/octocat/hello-world/actions/workflows/ci.yml?query=1#frag",
       ),
-    ).toEqual({ owner: "octocat", repo: "hello-world", filename: "ci.yml" });
+    ).toEqual({
+      owner: "octocat",
+      repo: "hello-world",
+      filename: "ci.yml",
+      managed: false,
+    });
+  });
+
+  it("parses a slug-path managed workflow as managed", () => {
+    expect(
+      parseWorkflowHref(
+        "/babel/babel/actions/workflows/copilot-pull-request-reviewer/copilot-pull-request-reviewer",
+      ),
+    ).toEqual({
+      owner: "babel",
+      repo: "babel",
+      filename: "copilot-pull-request-reviewer/copilot-pull-request-reviewer",
+      managed: true,
+    });
+  });
+
+  it("parses a single-segment slug workflow as managed", () => {
+    expect(
+      parseWorkflowHref("/octocat/hello-world/actions/workflows/dependabot"),
+    ).toEqual({
+      owner: "octocat",
+      repo: "hello-world",
+      filename: "dependabot",
+      managed: true,
+    });
   });
 
   it("returns null for a non-workflow href", () => {
@@ -202,7 +242,7 @@ describe("setDimmed", () => {
 
   it("dims an element", () => {
     setDimmed(element, true);
-    expect(element.style.opacity).toBe("0.8");
+    expect(element.style.opacity).toBe("0.35");
     expect(element.dataset.wveDimmed).toBe("true");
   });
 
@@ -216,7 +256,7 @@ describe("setDimmed", () => {
   it("is idempotent when dimming twice", () => {
     setDimmed(element, true);
     setDimmed(element, true);
-    expect(element.style.opacity).toBe("0.8");
+    expect(element.style.opacity).toBe("0.35");
     expect(element.dataset.wveDimmed).toBe("true");
   });
 
@@ -229,7 +269,7 @@ describe("setDimmed", () => {
   it("restores a pre-existing inline opacity value on un-dim", () => {
     element.style.opacity = "0.5";
     setDimmed(element, true);
-    expect(element.style.opacity).toBe("0.8");
+    expect(element.style.opacity).toBe("0.35");
     setDimmed(element, false);
     expect(element.style.opacity).toBe("0.5");
   });

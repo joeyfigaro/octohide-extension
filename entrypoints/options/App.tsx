@@ -13,7 +13,7 @@ type OverridesMap = Record<string, Record<string, Override>>;
 
 const styles: Record<string, React.CSSProperties> = {
   page: {
-    colorScheme: "light dark",
+    colorScheme: "dark light",
     maxWidth: 640,
     margin: "0 auto",
     padding: "24px 20px 48px",
@@ -184,11 +184,9 @@ export default function App() {
     );
   }
 
-  const repoKeys = Object.keys(overrides).sort();
-
   return (
     <div style={styles.page}>
-      <h1 style={styles.title}>Workflow Visibility</h1>
+      <h1 style={styles.title}>Octohide</h1>
 
       {error && (
         <p role="alert" style={styles.error}>
@@ -197,22 +195,7 @@ export default function App() {
       )}
 
       <section style={styles.section}>
-        <h2 style={styles.sectionTitle}>General</h2>
-        <label style={styles.row}>
-          <input
-            type="checkbox"
-            checked={settings.enabled}
-            onChange={(e) => onToggleEnabled(e.target.checked)}
-          />
-          <span>Enable workflow hiding</span>
-        </label>
-        <p style={styles.helper}>
-          When off, all workflows remain visible in the Actions sidebar.
-        </p>
-      </section>
-
-      <section style={styles.section}>
-        <h2 style={styles.sectionTitle}>Personal access token</h2>
+        <h2 style={styles.sectionTitle}>GitHub Access (Optional)</h2>
         <label htmlFor="pat" style={styles.label}>
           Token
         </label>
@@ -234,39 +217,9 @@ export default function App() {
           </button>
         </div>
         <p style={styles.helper}>
-          Optional. Only used as a fallback for private repositories when the
-          browser session cannot fetch workflow files.
+          Only used as a fallback for private repositories when the
+          browser session cannot fetch workflows.
         </p>
-      </section>
-
-      <section style={styles.section}>
-        <h2 style={styles.sectionTitle}>Manual overrides</h2>
-        {repoKeys.length === 0 ? (
-          <p style={styles.empty}>No manual overrides</p>
-        ) : (
-          repoKeys.map((repoKey) => {
-            const files = overrides[repoKey] ?? {};
-            return (
-              <div key={repoKey} style={styles.repoGroup}>
-                <p style={styles.repoKey}>{repoKey}</p>
-                {Object.keys(files)
-                  .sort()
-                  .map((filename) => (
-                    <div key={filename} style={styles.overrideRow}>
-                      <span style={styles.filename}>{filename}</span>
-                      <span style={styles.badge}>{files[filename]}</span>
-                      <button
-                        style={styles.button}
-                        onClick={() => onRemoveOverride(repoKey, filename)}
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  ))}
-              </div>
-            );
-          })
-        )}
       </section>
 
       <section style={styles.section}>

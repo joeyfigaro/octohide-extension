@@ -109,8 +109,12 @@ function Panel(props: {
         borderRadius: "6px",
       }}
     >
-      {props.count < 1 ? <span>No hidden workflows</span> : (
-        <span>{props.revealed ? "Showing" : null} {props.count} Hidden Workflows</span>
+      {props.count < 1 ? (
+        <span>No hidden workflows</span>
+      ) : (
+        <span>
+          {props.revealed ? "Showing" : null} {props.count} Hidden Workflows
+        </span>
       )}
       {props.count > 0 && (
         <button
@@ -184,6 +188,10 @@ function removePanel(): void {
   panelRoot = null;
 }
 
+function isPinned(host: HTMLElement): boolean {
+  return host.querySelector('[aria-label^="Unpin" i]') !== null;
+}
+
 function injectItemControls(
   ctx: ContentScriptContext,
   repoKey: string,
@@ -191,7 +199,17 @@ function injectItemControls(
 ): void {
   for (const workflow of workflows) {
     const host = workflow.element;
+
+    if (isPinned(host)) {
+      host.querySelector("[data-wve-toggle]")?.remove();
+      delete host.dataset.wveRow;
+      continue;
+    }
+
     host.dataset.wveRow = "true";
+    if (getComputedStyle(host).position === "static") {
+      host.style.position = "relative";
+    }
 
     let button = host.querySelector<HTMLButtonElement>("[data-wve-toggle]");
     if (!button) {
@@ -199,7 +217,10 @@ function injectItemControls(
       button.dataset.wveToggle = "true";
       button.type = "button";
       Object.assign(button.style, {
-        marginLeft: "6px",
+        position: "absolute",
+        top: "50%",
+        right: "8px",
+        transform: "translateY(-50%)",
         display: "inline-flex",
         alignItems: "center",
         justifyContent: "center",
@@ -210,6 +231,7 @@ function injectItemControls(
         borderRadius: "6px",
         background: "transparent",
         color: "inherit",
+        zIndex: "2",
       });
 
       button.addEventListener("click", (event) => {
@@ -300,7 +322,7 @@ async function orchestrate(ctx: ContentScriptContext): Promise<void> {
     workflows.map(async (workflow): Promise<Resolved> => {
       const override = overrides[workflow.filename] ?? null;
       let detection: Detection = null;
-      if (!override) {
+      if (!override && !workflow.managed) {
         detection = await resolveDetection(
           repoKey,
           repo.owner,
