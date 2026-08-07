@@ -1,0 +1,31 @@
+{
+  "name": "workflow-visibility-extension",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wxt",
+    "dev:firefox": "wxt -b firefox",
+    "build": "wxt build",
+    "build:firefox": "wxt build -b firefox",
+    "zip": "wxt zip",
+    "compile": "wxt prepare && tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "yaml": "^2.9.0"
+  },
+  "devDependencies": {
+    "@testing-library/dom": "^10.4.1",
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0",
+    "@wxt-dev/module-react": "^1.2.2",
+    "jsdom": "^30.0.1",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.10",
+    "wxt": "^0.21.3"
+  }
+}
