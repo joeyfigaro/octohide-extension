@@ -33,4 +33,13 @@ describe("requestWorkflowYaml", () => {
     expect(send).toHaveBeenCalledWith({ type: FETCH_WORKFLOW_YAML, ref });
     expect(result).toEqual(response);
   });
+
+  it("returns an error response shape verbatim", async () => {
+    const response: FetchWorkflowYamlResponse = { ok: false, status: 404 };
+    vi.spyOn(browser.runtime, "sendMessage").mockResolvedValue(
+      response as never,
+    );
+
+    expect(await requestWorkflowYaml(ref)).toEqual(response);
+  });
 });

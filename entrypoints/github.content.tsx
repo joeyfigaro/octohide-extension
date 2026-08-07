@@ -1,4 +1,5 @@
 import { createRoot, type Root } from "react-dom/client";
+import { browser } from "wxt/browser";
 import type { ContentScriptContext } from "wxt/utils/content-script-context";
 import { createShadowRootUi } from "wxt/utils/content-script-ui/shadow-root";
 import { isReusableOnly } from "@/lib/detect";
@@ -41,10 +42,16 @@ let scheduled = false;
 let running = false;
 let rerun = false;
 
+const failedDetections = new Set<string>();
+
 function unhideAll(): void {
   document
     .querySelectorAll<HTMLElement>('[data-wve-hidden="true"]')
     .forEach((el) => setHidden(el, false));
+}
+
+function removeItemControls(): void {
+  document.querySelectorAll("[data-wve-toggle]").forEach((el) => el.remove());
 }
 
 function hiddenCount(): number {
@@ -204,6 +211,8 @@ async function resolveDetection(
 ): Promise<Detection> {
   const cached = await getCached(repoKey, filename, TTL);
   if (cached !== null) return cached;
+  const failKey = `${repoKey}::${filename}`;
+  if (failedDetections.has(failKey)) return null;
   try {
     const response = await requestWorkflowYaml({ owner, repo, filename });
     if (response.ok && response.yaml != null) {
@@ -212,8 +221,10 @@ async function resolveDetection(
       return reusableOnly;
     }
   } catch {
+    failedDetections.add(failKey);
     return null;
   }
+  failedDetections.add(failKey);
   return null;
 }
 
@@ -226,6 +237,7 @@ function observeList(ctx: ContentScriptContext, container: Element): void {
 async function orchestrate(ctx: ContentScriptContext): Promise<void> {
   if (!isActionsPage(location.pathname)) {
     unhideAll();
+    removeItemControls();
     observer?.disconnect();
     removePanel();
     lastResults = [];
@@ -235,6 +247,8 @@ async function orchestrate(ctx: ContentScriptContext): Promise<void> {
   const settings = await getSettings();
   if (!settings.enabled) {
     unhideAll();
+    removeItemControls();
+    observer?.disconnect();
     removePanel();
     lastResults = [];
     return;
@@ -284,8 +298,8 @@ async function run(ctx: ContentScriptContext): Promise<void> {
   running = true;
   try {
     await orchestrate(ctx);
-  } catch {
-    // fail soft: if selectors miss or storage errors, leave the page untouched
+  } catch (err) {
+    console.debug("[wve] orchestrate failed", err);
   } finally {
     running = false;
   }
@@ -315,6 +329,16 @@ export default defineContentScript({
     }
     window.addEventListener("popstate", trigger);
     ctx.onInvalidated(() => window.removeEventListener("popstate", trigger));
+
+    const onStorageChanged = () => {
+      failedDetections.clear();
+      schedule(ctx);
+    };
+    browser.storage.onChanged.addListener(onStorageChanged);
+    ctx.onInvalidated(() =>
+      browser.storage.onChanged.removeListener(onStorageChanged),
+    );
+
     ctx.onInvalidated(() => {
       observer?.disconnect();
       removePanel();
