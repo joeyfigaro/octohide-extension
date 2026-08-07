@@ -188,8 +188,22 @@ function removePanel(): void {
   panelRoot = null;
 }
 
-function isPinned(host: HTMLElement): boolean {
-  return host.querySelector('[aria-label^="Unpin" i]') !== null;
+function nativeTrailingControl(host: HTMLElement): HTMLElement | null {
+  return host.querySelector<HTMLElement>(
+    '[aria-label^="Pin" i], [aria-label^="Unpin" i]',
+  );
+}
+
+function toggleRightOffset(host: HTMLElement): string {
+  const control = nativeTrailingControl(host);
+  if (!control) return "8px";
+  const hostRect = host.getBoundingClientRect();
+  const controlRect = control.getBoundingClientRect();
+  if (controlRect.width > 0) {
+    const gap = hostRect.right - controlRect.left + 6;
+    return `${Math.max(8, Math.round(gap))}px`;
+  }
+  return "40px";
 }
 
 function injectItemControls(
@@ -199,12 +213,6 @@ function injectItemControls(
 ): void {
   for (const workflow of workflows) {
     const host = workflow.element;
-
-    if (isPinned(host)) {
-      host.querySelector("[data-wve-toggle]")?.remove();
-      delete host.dataset.wveRow;
-      continue;
-    }
 
     host.dataset.wveRow = "true";
     if (getComputedStyle(host).position === "static") {
@@ -247,6 +255,8 @@ function injectItemControls(
 
       host.appendChild(button);
     }
+
+    button.style.right = toggleRightOffset(host);
 
     const hidden = currentlyHidden(workflow.filename);
     const state = String(hidden);
