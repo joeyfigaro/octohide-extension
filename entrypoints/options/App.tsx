@@ -184,6 +184,8 @@ export default function App() {
     );
   }
 
+  const repoKeys = Object.keys(overrides).sort();
+
   return (
     <div style={styles.page}>
       <h1 style={styles.title}>Octohide</h1>
@@ -217,9 +219,39 @@ export default function App() {
           </button>
         </div>
         <p style={styles.helper}>
-          Only used as a fallback for private repositories when the
-          browser session cannot fetch workflows.
+          Only used as a fallback for private repositories when the browser
+          session cannot fetch workflows.
         </p>
+      </section>
+
+      <section style={styles.section}>
+        <h2 style={styles.sectionTitle}>Manual overrides</h2>
+        {repoKeys.length === 0 ? (
+          <p style={styles.empty}>No manual overrides</p>
+        ) : (
+          repoKeys.map((repoKey) => {
+            const files = overrides[repoKey] ?? {};
+            return (
+              <div key={repoKey} style={styles.repoGroup}>
+                <p style={styles.repoKey}>{repoKey}</p>
+                {Object.keys(files)
+                  .sort()
+                  .map((filename) => (
+                    <div key={filename} style={styles.overrideRow}>
+                      <span style={styles.filename}>{filename}</span>
+                      <span style={styles.badge}>{files[filename]}</span>
+                      <button
+                        style={styles.button}
+                        onClick={() => onRemoveOverride(repoKey, filename)}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+              </div>
+            );
+          })
+        )}
       </section>
 
       <section style={styles.section}>
