@@ -222,6 +222,10 @@ export default function App() {
           Only used as a fallback for private repositories when the browser
           session cannot fetch workflows.
         </p>
+        <p style={styles.helper}>
+          Use a fine-grained token scoped to Contents: read-only with an
+          expiration date; it is stored unencrypted in browser storage.
+        </p>
       </section>
 
       <section style={styles.section}>
