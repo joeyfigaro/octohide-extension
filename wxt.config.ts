@@ -16,7 +16,7 @@ export default defineConfig({
       ? {
           browser_specific_settings: {
             gecko: {
-              id: "octohide@the-rogue.agency",
+              id: "octohide@joeyfigaro",
               data_collection_permissions: { required: ["none"] },
             },
           },
