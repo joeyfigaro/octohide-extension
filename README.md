@@ -1,5 +1,9 @@
 # Octohide
 
+[Download for Chrome](https://chromewebstore.google.com/detail/octohide/jefpacegjnggmjiclcloeidojbolhple?authuser=3&hl=en)
+
+[Download for Firefox](https://addons.mozilla.org/en-US/firefox/addon/octohide/)
+
 ## What is it?
 
 Octohide tidies up the workflow list on your GitHub Actions pages. Some workflows are only meant to be used as building blocks by other workflows and can't be run on their own, but GitHub still shows them in the sidebar and mixes them in with the ones you actually use. Octohide spots those and quietly tucks them away, so the list you see is just the workflows that matter to you. You stay in control: you can hide or show any workflow yourself, and reveal everything again whenever you like.
